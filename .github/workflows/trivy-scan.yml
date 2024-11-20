@@ -35,3 +35,4 @@ jobs:
         with:
           name: trivy-scan-report
           path: scan-reports/trivy-scan.json
+          
