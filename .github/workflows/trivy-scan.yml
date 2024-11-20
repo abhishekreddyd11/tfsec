@@ -19,9 +19,8 @@ jobs:
 
     # Step 2: Install Trivy
     - name: Install Trivy
-  run: |
-    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-    mv ./trivy /bin/trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh mv ./trivy /bin/trivy
 
 
     # Step 3: Run Trivy to scan the repository
