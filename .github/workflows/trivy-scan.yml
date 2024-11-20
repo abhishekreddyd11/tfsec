@@ -1,0 +1,37 @@
+name: Trivy Scan Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Install Trivy
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+        sudo mv trivy /usr/local/bin/
+
+    # Step 3: Run Trivy to scan the repository
+    - name: Scan for vulnerabilities and secrets
+      run: |
+        mkdir -p scan-reports
+        trivy fs . --scanners vuln,config,secret --format json --output scan-reports/trivy-scan.json
+
+    # Step 4: Upload scan report as an artifact
+    - name: Upload Trivy Scan Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: trivy-scan-report
+        path: scan-reports/trivy-scan.json
