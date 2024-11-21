@@ -1,43 +1,6 @@
-# Main Terraform file with vulnerabilities for testing
-resource "aws_security_group" "example" {
-  name        = "example-security-group"
-  description = "Allow SSH and HTTP traffic"
-  vpc_id      = "vpc-12345678"
-
-  # Insecure ingress rule: allows access from the entire Internet
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH from anywhere" # Vulnerable: unrestricted SSH
-  }
-
-  # Insecure ingress rule: allows HTTP access to the whole internet
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic from anywhere"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic" # Vulnerable: unrestricted outbound traffic
-  }
-
-  tags = {
-    Name = "example-security-group"
-  }
-}
-
 resource "aws_s3_bucket" "example_bucket" {
   bucket = "example-unsecure-bucket"
-  acl    = "public-read" # Vulnerable: publicly accessible bucket
+  acl    = "private" # Updated ACL to private
 
   tags = {
     Name        = "example-bucket"
@@ -45,37 +8,50 @@ resource "aws_s3_bucket" "example_bucket" {
   }
 }
 
-resource "aws_iam_role" "example_role" {
-  name               = "example-role"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket                  = aws_s3_bucket.example_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-resource "aws_iam_policy" "example_policy" {
-  name = "example-policy"
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.example_bucket.id
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "*", # Vulnerable: overly permissive action
-      "Resource": "*"
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.example.arn
     }
-  ]
+  }
 }
-EOF
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_security_group" "example" {
+  ingress {
+    cidr_blocks = ["192.168.1.0/24"] # Restrict ingress to specific subnet
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+  }
+
+  egress {
+    cidr_blocks = ["192.168.1.0/24"] # Restrict egress
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+  }
+}
+
+resource "aws_kms_key" "example" {
+  description             = "Example KMS key"
+  deletion_window_in_days = 10
 }
