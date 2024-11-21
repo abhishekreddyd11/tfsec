@@ -9,6 +9,7 @@ jobs:
   scan:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
+
     steps:
       # Step 1: Checkout the code
       - uses: actions/checkout@v3
@@ -17,10 +18,21 @@ jobs:
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          sudo mv ./trivy /usr/local/bin
 
-      # Step 3: Run Trivy to scan the repository
+      # Step 3: Verify Trivy Installation
+      - name: Verify Trivy Installation
+        run: trivy --version
+
+      # Step 4: Run Trivy to scan the repository
       - name: Run Trivy Scan
         run: |
           mkdir -p scan-reports
-          trivy fs --scanne
+          trivy fs --scanners vuln,config,secret --format json --output scan-reports/trivy-scan.json .
 
+      # Step 5: Upload the Trivy scan report
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: Trivy Scan Report
+          path: scan-reports/trivy-scan.json
