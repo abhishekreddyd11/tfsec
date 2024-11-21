@@ -9,7 +9,6 @@ jobs:
   scan:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
-
     steps:
       # Step 1: Checkout the code
       - uses: actions/checkout@v3
