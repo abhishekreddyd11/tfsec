@@ -20,23 +20,19 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           sudo mv ./bin/trivy /usr/local/bin
 
-      # Step 3: Debug Installation
-      - name: Debug Installation
-        run: ls -R ./
-
-      # Step 4: Verify Trivy Installation
+      # Step 3: Verify Trivy Installation
       - name: Verify Trivy Installation
         run: trivy --version
 
-      # Step 5: Run Trivy Scan
+      # Step 4: Run Trivy Scan
       - name: Run Trivy Scan
         run: |
           mkdir -p scan-reports
-          trivy fs --scanners vuln,config,secret --format json --output scan-reports/trivy-scan.json .
+          trivy fs --scanners vuln,config,secret --format table --output scan-reports/trivy-scan.txt .
 
-      # Step 6: Upload the Trivy Scan Report
+      # Step 5: Upload the Trivy Scan Report
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@v3
         with:
           name: Trivy Scan Report
-          path: scan-reports/trivy-scan.json
+          path: scan-reports/trivy-scan.txt
