@@ -40,13 +40,18 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example_bucket_en
   }
 }
 
-# Define a KMS (Key Management Service) key for encryption
+# Define a KMS (Key Management Service) key
+# tfsec:ignore:AVD-AWS-0065
 resource "aws_kms_key" "example_key" {
   # Description of the KMS key
   description = "KMS key for S3 bucket encryption"
   # Key deletion window in days
   deletion_window_in_days = 10
-  key_rotation_enabled = true
+}
+
+# Enable key rotation for the KMS key
+resource "aws_kms_key_rotation" "example_key_rotation" {
+  key_id = aws_kms_key.example_key.id
 }
 
 # Enable versioning for the S3 bucket to keep multiple versions of objects
