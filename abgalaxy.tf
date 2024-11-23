@@ -48,6 +48,11 @@ resource "aws_kms_key" "example_key" {
   deletion_window_in_days = 10
 }
 
+# Enable key rotation for the KMS key
+resource "aws_kms_key_rotation" "example_key_rotation" {
+  key_id = aws_kms_key.example_key.id
+}
+
 # Enable versioning for the S3 bucket to keep multiple versions of objects
 resource "aws_s3_bucket_versioning" "example_bucket_versioning" {
   # Reference the bucket
